@@ -53,7 +53,7 @@ compile_commands.json
 
 # IDE files
 .idea/
-.vscode/
+# .vscode/
 *.swp
 *.swo
 *~
