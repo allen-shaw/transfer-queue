@@ -17,6 +17,7 @@ namespace transfer_queue {
 /// 写入时按 hash(instance_id) % smp::count 路由到对应 shard。
 /// 读取时跨 shard 聚合所有 ready group。
 class BufferManager {
+    friend class Metrics;
 public:
     BufferManager(const TransferQueueConfig& config);
     ~BufferManager();

@@ -26,6 +26,7 @@ namespace transfer_queue {
 /// - 消费式读取：读取后删除
 /// - UID 去重
 class BufferShard {
+    friend class Metrics;
 public:
     /// 构造函数
     /// @param config 全局配置（引用，可动态更新）

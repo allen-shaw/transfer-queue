@@ -25,7 +25,9 @@ add_executable(transferqueue-server
     src/server/http_handler.cc
     src/server/rpc_handler.cc
     src/server/dedup_filter.cc
+    src/server/metrics.cc
     ${PROTO_SRCS}
+    ${PROTO_HDRS}
 )
 
 target_include_directories(transferqueue-server PRIVATE ${TQ_INCLUDE_DIRS})
@@ -40,6 +42,7 @@ add_executable(transferqueue-client
     src/client/main.cc
     src/client/client.cc
     ${PROTO_SRCS}
+    ${PROTO_HDRS}
 )
 
 target_include_directories(transferqueue-client PRIVATE ${TQ_INCLUDE_DIRS})
@@ -72,6 +75,7 @@ add_executable(test-buffer-shard
     src/server/buffer_shard.cc
     src/server/dedup_filter.cc
     ${PROTO_SRCS}
+    ${PROTO_HDRS}
 )
 
 target_include_directories(test-buffer-shard PRIVATE ${TQ_INCLUDE_DIRS})
@@ -90,6 +94,7 @@ add_executable(test-buffer-manager
     src/server/buffer_shard.cc
     src/server/dedup_filter.cc
     ${PROTO_SRCS}
+    ${PROTO_HDRS}
 )
 
 target_include_directories(test-buffer-manager PRIVATE ${TQ_INCLUDE_DIRS})

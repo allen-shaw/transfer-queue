@@ -1,6 +1,8 @@
 #pragma once
 
 #include <seastar/core/future.hh>
+#include <seastar/core/metrics_registration.hh>
+
 
 #include "transfer_queue/server/buffer_manager.h"
 
@@ -29,7 +31,8 @@ private:
     void register_metrics();
 
     BufferManager& manager_;
-    // TODO: seastar::metrics::metric_groups
+    seastar::metrics::metric_groups metric_groups_;
 };
+
 
 } // namespace transfer_queue
