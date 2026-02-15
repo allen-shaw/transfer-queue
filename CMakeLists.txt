@@ -26,6 +26,7 @@ add_executable(transferqueue-server
     src/server/rpc_handler.cc
     src/server/dedup_filter.cc
     src/server/metrics.cc
+    src/server/disk_storage.cc
     ${PROTO_SRCS}
     ${PROTO_HDRS}
 )
@@ -105,4 +106,21 @@ target_link_libraries(test-buffer-manager PRIVATE
     protobuf::libprotobuf
 )
 
+
 add_test(NAME BufferManager COMMAND test-buffer-manager)
+
+add_executable(test-disk-storage
+    tests/test_disk_storage.cc
+    src/server/disk_storage.cc
+    ${PROTO_SRCS}
+)
+
+target_include_directories(test-disk-storage PRIVATE ${TQ_INCLUDE_DIRS})
+
+target_link_libraries(test-disk-storage PRIVATE
+    GTest::gtest
+    Seastar::seastar
+    protobuf::libprotobuf
+)
+
+add_test(NAME DiskStorage COMMAND test-disk-storage)

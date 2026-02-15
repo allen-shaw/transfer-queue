@@ -5,29 +5,32 @@
 #include <memory>
 
 #include <seastar/core/future.hh>
+#include <seastar/core/file.hh>
+#include <seastar/core/iostream.hh>
+#include <optional>
 
 #include "transferqueue.pb.h"
 
 namespace transfer_queue {
 
-/// SPDK 异步存储引擎
+/// 异步磁盘存储引擎
 ///
-/// 负责将内存中的数据溢出到 SPDK 块设备，以及从磁盘加载回内存。
-/// 在专用 core 上运行，不阻塞写入路径。
+/// 负责将内存中的数据溢出到磁盘，以及从磁盘加载回内存。
+/// 使用 Seastar 原生文件 API (DMA) 实现高性能异步 I/O。
 ///
 /// 触发条件：内存使用率 >= spill_to_disk_threshold (默认 80%)
-class SpdkStorage {
+class DiskStorage {
 public:
     /// 构造函数
-    /// @param bdev_name SPDK 块设备名称
-    explicit SpdkStorage(const std::string& bdev_name);
+    /// @param bdev_name 存储目录路径
+    explicit DiskStorage(const std::string& bdev_name);
 
-    ~SpdkStorage();
+    ~DiskStorage();
 
-    /// 初始化 SPDK 环境
+    /// 初始化存储目录
     seastar::future<> init();
 
-    /// 关闭 SPDK，释放资源
+    /// 关闭存储，释放资源
     seastar::future<> shutdown();
 
     // ========================================================================
@@ -71,7 +74,9 @@ public:
 private:
     std::string bdev_name_;
     bool initialized_ = false;
-    // TODO: SPDK blobstore / bdev 句柄
+    seastar::file file_;
+    uint64_t write_offset_ = 0;
+    std::optional<seastar::output_stream<char>> out_;
 };
 
 } // namespace transfer_queue
