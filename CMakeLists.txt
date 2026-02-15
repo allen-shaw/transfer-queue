@@ -48,3 +48,22 @@ target_link_libraries(transferqueue-client PRIVATE
     Seastar::seastar
     protobuf::libprotobuf
 )
+
+# --- Tests ---
+enable_testing()
+find_package(GTest REQUIRED)
+
+add_executable(test-dedup-filter
+    tests/test_dedup_filter.cc
+    src/server/dedup_filter.cc
+)
+
+target_include_directories(test-dedup-filter PRIVATE ${TQ_INCLUDE_DIRS})
+
+target_link_libraries(test-dedup-filter PRIVATE
+    GTest::gtest_main
+    protobuf::libprotobuf
+)
+
+add_test(NAME DedupFilter COMMAND test-dedup-filter)
+
