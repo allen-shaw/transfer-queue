@@ -2,12 +2,12 @@
 
 #include <string>
 #include <vector>
+#include <memory>
 #include <unordered_map>
 
 #include <seastar/core/future.hh>
 #include <seastar/core/sstring.hh>
 
-#include "transfer_queue/common/trajectory.h"
 #include "transfer_queue/common/config.h"
 #include "transfer_queue/server/dedup_filter.h"
 #include "transferqueue.pb.h"
@@ -39,12 +39,12 @@ public:
     /// 写入单条轨迹
     /// @param trajectory 要写入的轨迹数据
     /// @return future<bool>: true 表示写入成功，false 表示 uid 重复被去重
-    seastar::future<bool> write(TrajectoryData trajectory);
+    seastar::future<bool> write(transferqueue::Trajectory trajectory);
 
     /// 批量写入轨迹
     /// @param trajectories 要写入的轨迹列表
     /// @return future<int32_t>: 实际写入的条数（去重后）
-    seastar::future<int32_t> batch_write(std::vector<TrajectoryData> trajectories);
+    seastar::future<int32_t> batch_write(std::vector<transferqueue::Trajectory> trajectories);
 
     // ========================================================================
     // 读取
@@ -52,8 +52,9 @@ public:
 
     /// 读取所有已就绪（ready）的轨迹组，读后删除
     /// @param max_groups 最多返回多少组，0 表示不限
-    /// @return 已就绪的轨迹组列表
-    seastar::future<std::vector<TrajectoryGroupData>> read_ready_groups(int32_t max_groups = 0);
+    /// @return 已就绪的轨迹组列表（unique_ptr 包装以兼容 Seastar future）
+    seastar::future<std::vector<std::unique_ptr<transferqueue::TrajectoryGroup>>>
+    read_ready_groups(int32_t max_groups = 0);
 
     /// 当前是否有已就绪的组
     seastar::future<bool> has_ready_groups() const;
@@ -69,10 +70,10 @@ public:
     seastar::future<> reset();
 
     /// 获取本 shard 的状态
-    seastar::future<transferqueue::BufferStatus> get_status() const;
+    seastar::future<std::unique_ptr<transferqueue::BufferStatus>> get_status() const;
 
     /// 获取本 shard 的元信息（用于聚合到全局 MetaInfo）
-    seastar::future<transferqueue::MetaInfo> get_meta_info() const;
+    seastar::future<std::unique_ptr<transferqueue::MetaInfo>> get_meta_info() const;
 
     // ========================================================================
     // 配置
@@ -91,8 +92,8 @@ private:
     const TransferQueueConfig* config_;
     DedupFilter dedup_filter_;
 
-    // instance_id -> TrajectoryGroupData
-    std::unordered_map<std::string, TrajectoryGroupData> groups_;
+    // instance_id -> TrajectoryGroup
+    std::unordered_map<std::string, transferqueue::TrajectoryGroup> groups_;
 
     // 统计
     int64_t total_trajectories_ = 0;

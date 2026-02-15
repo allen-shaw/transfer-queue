@@ -27,14 +27,14 @@ seastar::future<> BufferManager::stop() {
 // 写入
 // ============================================================================
 
-seastar::future<bool> BufferManager::write(TrajectoryData trajectory) {
+seastar::future<bool> BufferManager::write(transferqueue::Trajectory trajectory) {
     // TODO: 实现
-    // auto sid = shard_for(trajectory.instance_id);
+    // auto sid = shard_for(trajectory.instance_id());
     // return shards_.invoke_on(sid, &BufferShard::write, std::move(trajectory));
     return seastar::make_ready_future<bool>(false);
 }
 
-seastar::future<int32_t> BufferManager::batch_write(std::vector<TrajectoryData> trajectories) {
+seastar::future<int32_t> BufferManager::batch_write(std::vector<transferqueue::Trajectory> trajectories) {
     // TODO: 实现
     // 1. 按 instance_id 分组
     // 2. 将各组分发到对应 shard
@@ -46,17 +46,18 @@ seastar::future<int32_t> BufferManager::batch_write(std::vector<TrajectoryData> 
 // 读取
 // ============================================================================
 
-seastar::future<std::vector<TrajectoryGroupData>> BufferManager::read_ready_groups(int32_t max_groups) {
+seastar::future<std::vector<std::unique_ptr<transferqueue::TrajectoryGroup>>>
+BufferManager::read_ready_groups(int32_t max_groups) {
     // TODO: 实现
     // return shards_.map_reduce(...)
-    return seastar::make_ready_future<std::vector<TrajectoryGroupData>>();
+    return seastar::make_ready_future<std::vector<std::unique_ptr<transferqueue::TrajectoryGroup>>>();
 }
 
-seastar::future<std::vector<TrajectoryGroupData>> BufferManager::read_ready_groups_blocking(
-        int32_t max_groups, int32_t timeout_ms) {
+seastar::future<std::vector<std::unique_ptr<transferqueue::TrajectoryGroup>>>
+BufferManager::read_ready_groups_blocking(int32_t max_groups, int32_t timeout_ms) {
     // TODO: 实现
     // 轮询或条件变量等待 ready groups
-    return seastar::make_ready_future<std::vector<TrajectoryGroupData>>();
+    return seastar::make_ready_future<std::vector<std::unique_ptr<transferqueue::TrajectoryGroup>>>();
 }
 
 seastar::future<bool> BufferManager::has_ready_groups() const {
@@ -70,21 +71,19 @@ seastar::future<bool> BufferManager::has_ready_groups() const {
 
 seastar::future<> BufferManager::delete_instance(const std::string& instance_id) {
     // TODO: 实现
-    // auto sid = shard_for(instance_id);
-    // return shards_.invoke_on(sid, &BufferShard::delete_instance, instance_id);
     return seastar::make_ready_future<>();
 }
 
 seastar::future<> BufferManager::reset() {
     // TODO: 实现
-    // return shards_.invoke_on_all(&BufferShard::reset);
     return seastar::make_ready_future<>();
 }
 
-seastar::future<transferqueue::BufferStatus> BufferManager::get_status() const {
+seastar::future<std::unique_ptr<transferqueue::BufferStatus>> BufferManager::get_status() const {
     // TODO: 实现
     // 聚合所有 shard 的状态
-    return seastar::make_ready_future<transferqueue::BufferStatus>();
+    return seastar::make_ready_future<std::unique_ptr<transferqueue::BufferStatus>>(
+        std::make_unique<transferqueue::BufferStatus>());
 }
 
 seastar::future<> BufferManager::update_config(const transferqueue::ConfigRequest& config_req) {

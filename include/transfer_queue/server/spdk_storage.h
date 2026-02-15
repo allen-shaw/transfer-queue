@@ -2,10 +2,11 @@
 
 #include <string>
 #include <vector>
+#include <memory>
 
 #include <seastar/core/future.hh>
 
-#include "transfer_queue/common/trajectory.h"
+#include "transferqueue.pb.h"
 
 namespace transfer_queue {
 
@@ -36,11 +37,11 @@ public:
     /// 将轨迹组数据异步写入磁盘
     /// @param group 要持久化的轨迹组
     /// @return 写入成功后的磁盘偏移/key，用于后续加载
-    seastar::future<uint64_t> spill(const TrajectoryGroupData& group);
+    seastar::future<uint64_t> spill(const transferqueue::TrajectoryGroup& group);
 
     /// 批量溢出多个轨迹组
     seastar::future<std::vector<uint64_t>> spill_batch(
-        const std::vector<TrajectoryGroupData>& groups);
+        const std::vector<transferqueue::TrajectoryGroup>& groups);
 
     // ========================================================================
     // 读取（从磁盘加载）
@@ -48,11 +49,11 @@ public:
 
     /// 从磁盘加载轨迹组数据
     /// @param offset spill 时返回的偏移/key
-    seastar::future<TrajectoryGroupData> load(uint64_t offset);
+    seastar::future<std::unique_ptr<transferqueue::TrajectoryGroup>> load(uint64_t offset);
 
     /// 批量加载
-    seastar::future<std::vector<TrajectoryGroupData>> load_batch(
-        const std::vector<uint64_t>& offsets);
+    seastar::future<std::vector<std::unique_ptr<transferqueue::TrajectoryGroup>>>
+    load_batch(const std::vector<uint64_t>& offsets);
 
     // ========================================================================
     // 管理

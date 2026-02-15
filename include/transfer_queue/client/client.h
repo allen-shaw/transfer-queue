@@ -2,11 +2,11 @@
 
 #include <string>
 #include <vector>
+#include <memory>
 #include <functional>
 
 #include <seastar/core/future.hh>
 
-#include "transfer_queue/common/trajectory.h"
 #include "transferqueue.pb.h"
 
 namespace transfer_queue {
@@ -53,10 +53,10 @@ public:
     /// 批量写入轨迹
     /// @param trajectories 要写入的轨迹列表
     /// @return 实际写入条数
-    seastar::future<int32_t> batch_write(std::vector<TrajectoryData> trajectories);
+    seastar::future<int32_t> batch_write(std::vector<transferqueue::Trajectory> trajectories);
 
     /// 写入单条轨迹（便捷方法）
-    seastar::future<bool> write(TrajectoryData trajectory);
+    seastar::future<bool> write(transferqueue::Trajectory trajectory);
 
     // ========================================================================
     // 读取
@@ -66,7 +66,7 @@ public:
     /// @param max_groups 最多返回多少组
     /// @param block 是否阻塞等待
     /// @param timeout_ms 阻塞超时（ms），仅在 block=true 时有效
-    seastar::future<std::vector<TrajectoryGroupData>>
+    seastar::future<std::vector<std::unique_ptr<transferqueue::TrajectoryGroup>>>
     batch_read(int32_t max_groups = 0, bool block = false, int32_t timeout_ms = 0);
 
     // ========================================================================
@@ -74,7 +74,7 @@ public:
     // ========================================================================
 
     /// 查询 Buffer 状态
-    seastar::future<transferqueue::BufferStatus> get_status();
+    seastar::future<std::unique_ptr<transferqueue::BufferStatus>> get_status();
 
     // ========================================================================
     // 流式订阅
@@ -85,7 +85,7 @@ public:
     /// @param callback 每个就绪组到达时的回调
     seastar::future<> subscribe(
         int32_t prefetch_groups,
-        std::function<seastar::future<>(TrajectoryGroupData)> callback);
+        std::function<seastar::future<>(const transferqueue::TrajectoryGroup&)> callback);
 
     /// 取消订阅
     seastar::future<> unsubscribe();

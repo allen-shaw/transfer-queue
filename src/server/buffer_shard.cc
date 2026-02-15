@@ -13,7 +13,7 @@ BufferShard::~BufferShard() = default;
 // 写入
 // ============================================================================
 
-seastar::future<bool> BufferShard::write(TrajectoryData trajectory) {
+seastar::future<bool> BufferShard::write(transferqueue::Trajectory trajectory) {
     // TODO: 实现
     // 1. UID 去重检查
     // 2. 按 instance_id 插入到对应 group
@@ -21,7 +21,7 @@ seastar::future<bool> BufferShard::write(TrajectoryData trajectory) {
     return seastar::make_ready_future<bool>(false);
 }
 
-seastar::future<int32_t> BufferShard::batch_write(std::vector<TrajectoryData> trajectories) {
+seastar::future<int32_t> BufferShard::batch_write(std::vector<transferqueue::Trajectory> trajectories) {
     // TODO: 实现
     return seastar::make_ready_future<int32_t>(0);
 }
@@ -30,12 +30,13 @@ seastar::future<int32_t> BufferShard::batch_write(std::vector<TrajectoryData> tr
 // 读取
 // ============================================================================
 
-seastar::future<std::vector<TrajectoryGroupData>> BufferShard::read_ready_groups(int32_t max_groups) {
+seastar::future<std::vector<std::unique_ptr<transferqueue::TrajectoryGroup>>>
+BufferShard::read_ready_groups(int32_t max_groups) {
     // TODO: 实现
     // 1. 遍历 groups_，收集 is_complete == true 的组
     // 2. 从 groups_ 中删除已读取的组（消费语义）
     // 3. 更新 total_consumed_
-    return seastar::make_ready_future<std::vector<TrajectoryGroupData>>();
+    return seastar::make_ready_future<std::vector<std::unique_ptr<transferqueue::TrajectoryGroup>>>();
 }
 
 seastar::future<bool> BufferShard::has_ready_groups() const {
@@ -57,14 +58,16 @@ seastar::future<> BufferShard::reset() {
     return seastar::make_ready_future<>();
 }
 
-seastar::future<transferqueue::BufferStatus> BufferShard::get_status() const {
+seastar::future<std::unique_ptr<transferqueue::BufferStatus>> BufferShard::get_status() const {
     // TODO: 实现
-    return seastar::make_ready_future<transferqueue::BufferStatus>();
+    return seastar::make_ready_future<std::unique_ptr<transferqueue::BufferStatus>>(
+        std::make_unique<transferqueue::BufferStatus>());
 }
 
-seastar::future<transferqueue::MetaInfo> BufferShard::get_meta_info() const {
+seastar::future<std::unique_ptr<transferqueue::MetaInfo>> BufferShard::get_meta_info() const {
     // TODO: 实现
-    return seastar::make_ready_future<transferqueue::MetaInfo>();
+    return seastar::make_ready_future<std::unique_ptr<transferqueue::MetaInfo>>(
+        std::make_unique<transferqueue::MetaInfo>());
 }
 
 // ============================================================================

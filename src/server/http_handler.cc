@@ -25,7 +25,7 @@ seastar::future<std::unique_ptr<seastar::http::reply>>
 HttpHandler::handle_write(std::unique_ptr<seastar::http::request> req,
                           std::unique_ptr<seastar::http::reply> rep) {
     // TODO: 实现
-    // 1. 解析 JSON body → TrajectoryData
+    // 1. 解析 JSON body → transferqueue::Trajectory
     // 2. 调用 manager_.write()
     // 3. 构建 JSON 响应
     return seastar::make_ready_future<std::unique_ptr<seastar::http::reply>>(std::move(rep));
@@ -65,13 +65,13 @@ HttpHandler::handle_delete_instance(std::unique_ptr<seastar::http::request> req,
 // JSON 工具
 // ============================================================================
 
-TrajectoryData HttpHandler::parse_write_request(const seastar::sstring& body) {
+transferqueue::Trajectory HttpHandler::parse_write_request(const seastar::sstring& body) {
     // TODO: 实现 JSON 解析
-    return TrajectoryData{};
+    return transferqueue::Trajectory{};
 }
 
 seastar::sstring HttpHandler::serialize_rollout_data(
-        const std::vector<TrajectoryGroupData>& groups) {
+        const std::vector<std::unique_ptr<transferqueue::TrajectoryGroup>>& groups) {
     // TODO: 实现 JSON 序列化
     return "{}";
 }

@@ -1,9 +1,12 @@
 #pragma once
 
+#include <memory>
+
 #include <seastar/core/future.hh>
 #include <seastar/http/httpd.hh>
 
 #include "transfer_queue/server/buffer_manager.h"
+#include "transferqueue.pb.h"
 
 namespace transfer_queue {
 
@@ -33,7 +36,7 @@ private:
     // ========================================================================
 
     /// POST /buffer/write — 写入单条轨迹
-    /// 解析 JSON 请求体，转换为 TrajectoryData，调用 BufferManager::write()
+    /// 解析 JSON 请求体，转换为 Trajectory protobuf，调用 BufferManager::write()
     seastar::future<std::unique_ptr<seastar::http::reply>>
     handle_write(std::unique_ptr<seastar::http::request> req,
                  std::unique_ptr<seastar::http::reply> rep);
@@ -63,12 +66,12 @@ private:
     // JSON 工具
     // ========================================================================
 
-    /// 将 JSON 字符串解析为 TrajectoryData
-    TrajectoryData parse_write_request(const seastar::sstring& body);
+    /// 将 JSON 字符串解析为 Trajectory protobuf
+    transferqueue::Trajectory parse_write_request(const seastar::sstring& body);
 
     /// 将读取结果序列化为兼容的 JSON 响应
     seastar::sstring serialize_rollout_data(
-        const std::vector<TrajectoryGroupData>& groups);
+        const std::vector<std::unique_ptr<transferqueue::TrajectoryGroup>>& groups);
 
     BufferManager& manager_;
 };

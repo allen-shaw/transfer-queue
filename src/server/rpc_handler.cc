@@ -33,7 +33,7 @@ void RpcHandler::register_handlers() {
 seastar::future<seastar::sstring> RpcHandler::handle_batch_write(seastar::sstring request_data) {
     // TODO: 实现
     // 1. 反序列化 BatchWriteRequest
-    // 2. 转换为 TrajectoryData 列表
+    // 2. 转换为 Trajectory 列表
     // 3. 调用 manager_.batch_write()
     // 4. 序列化 BatchWriteResponse
     return seastar::make_ready_future<seastar::sstring>("");
