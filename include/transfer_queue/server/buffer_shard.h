@@ -1,5 +1,6 @@
 #pragma once
 
+#include <chrono>
 #include <string>
 #include <vector>
 #include <memory>
@@ -81,11 +82,14 @@ public:
 
     /// 动态更新配置
     void update_config(const TransferQueueConfig& config);
+    // ========================================================================
+    // 生命周期
+    // ========================================================================
 
-private:
-    /// 检查超时的未满组，标记为 ready
+    /// 检查超时的未满组，标记为 ready（由 BufferManager 定时调用）
     seastar::future<> check_group_timeouts();
 
+private:
     /// 计算当前内存使用量
     size_t estimate_memory_usage() const;
 
@@ -94,6 +98,9 @@ private:
 
     // instance_id -> TrajectoryGroup
     std::unordered_map<std::string, transferqueue::TrajectoryGroup> groups_;
+
+    // instance_id -> 创建时间（用于超时检测）
+    std::unordered_map<std::string, std::chrono::steady_clock::time_point> group_created_times_;
 
     // 统计
     int64_t total_trajectories_ = 0;

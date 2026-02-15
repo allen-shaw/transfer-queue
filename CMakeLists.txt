@@ -67,3 +67,19 @@ target_link_libraries(test-dedup-filter PRIVATE
 
 add_test(NAME DedupFilter COMMAND test-dedup-filter)
 
+add_executable(test-buffer-shard
+    tests/test_buffer_shard.cc
+    src/server/buffer_shard.cc
+    src/server/dedup_filter.cc
+    ${PROTO_SRCS}
+)
+
+target_include_directories(test-buffer-shard PRIVATE ${TQ_INCLUDE_DIRS})
+
+target_link_libraries(test-buffer-shard PRIVATE
+    GTest::gtest_main
+    Seastar::seastar
+    protobuf::libprotobuf
+)
+
+add_test(NAME BufferShard COMMAND test-buffer-shard)
