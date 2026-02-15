@@ -83,3 +83,21 @@ target_link_libraries(test-buffer-shard PRIVATE
 )
 
 add_test(NAME BufferShard COMMAND test-buffer-shard)
+
+add_executable(test-buffer-manager
+    tests/test_buffer_manager.cc
+    src/server/buffer_manager.cc
+    src/server/buffer_shard.cc
+    src/server/dedup_filter.cc
+    ${PROTO_SRCS}
+)
+
+target_include_directories(test-buffer-manager PRIVATE ${TQ_INCLUDE_DIRS})
+
+target_link_libraries(test-buffer-manager PRIVATE
+    GTest::gtest
+    Seastar::seastar
+    protobuf::libprotobuf
+)
+
+add_test(NAME BufferManager COMMAND test-buffer-manager)

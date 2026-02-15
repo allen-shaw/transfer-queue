@@ -1,6 +1,5 @@
 #include "transfer_queue/server/buffer_shard.h"
 
-#include <algorithm>
 #include <chrono>
 
 namespace transfer_queue {
