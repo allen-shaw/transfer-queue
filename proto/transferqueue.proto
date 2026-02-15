@@ -1,0 +1,154 @@
+syntax = "proto3";
+package transferqueue;
+
+// ============================================================================
+// 数据模型
+// ============================================================================
+
+// 单条对话消息
+message ChatMessage {
+    string role = 1;          // "system" | "user" | "assistant" | "tool"
+    string content = 2;
+}
+
+// 单条轨迹（一次 LLM 完整交互）
+message Trajectory {
+    string uid = 1;                      // 全局唯一轨迹 ID (UUID)
+    string instance_id = 2;              // 问题实例 ID（同一 prompt 共享）
+    repeated ChatMessage messages = 3;   // 完整对话历史
+    double reward = 4;                   // 奖励分数
+    map<string, string> extra_info = 5;  // 附加元数据
+}
+
+// 轨迹组（按 instance_id 聚合）
+message TrajectoryGroup {
+    string instance_id = 1;
+    repeated Trajectory trajectories = 2;
+    int32 group_size = 3;                // 目标组大小 (= n_samples_per_prompt)
+    bool is_complete = 4;
+}
+
+// 元信息
+message MetaInfo {
+    int64 total_samples = 1;
+    int32 num_groups = 2;
+    double avg_group_size = 3;
+    double avg_reward = 4;
+    repeated string finished_group_ids = 5;
+}
+
+// Buffer 状态
+message BufferStatus {
+    int64 total_trajectories = 1;
+    int64 total_consumed = 2;
+    int32 pending_groups = 3;          // 已满组未读取
+    int32 incomplete_groups = 4;       // 未满组
+    int64 memory_usage_bytes = 5;
+    int64 disk_usage_bytes = 6;
+}
+
+// ============================================================================
+// RPC API 消息
+// ============================================================================
+
+// --- BatchWrite ---
+message BatchWriteRequest {
+    repeated Trajectory trajectories = 1;
+}
+
+message BatchWriteResponse {
+    bool success = 1;
+    int32 written_count = 2;
+}
+
+// --- BatchRead ---
+message BatchReadRequest {
+    int32 max_groups = 1;     // 最多返回多少组
+    bool block = 2;           // 是否阻塞等待
+    int32 timeout_ms = 3;     // 阻塞超时 (ms)
+}
+
+message BatchReadResult {
+    bool success = 1;
+    string message = 2;
+    repeated TrajectoryGroup groups = 3;
+    MetaInfo meta_info = 4;
+}
+
+// --- GetStatus ---
+// 请求使用 google.protobuf.Empty 或空消息
+message GetStatusRequest {}
+
+// 响应复用 BufferStatus
+
+// --- Subscribe ---
+message SubscribeRequest {
+    int32 prefetch_groups = 1;    // 预取组数
+}
+
+// ============================================================================
+// HTTP 兼容层消息（JSON ↔ Protobuf 转换用）
+// ============================================================================
+
+// POST /buffer/write 请求
+message WriteRequest {
+    string uid = 1;
+    string instance_id = 2;
+    repeated ChatMessage messages = 3;
+    double reward = 4;
+    map<string, string> extra_info = 5;
+}
+
+// POST /buffer/write 响应
+message WriteResponse {
+    bool success = 1;
+    string message = 2;
+}
+
+// POST /get_rollout_data 请求（空或可选过滤）
+message GetRolloutDataRequest {}
+
+// POST /get_rollout_data 响应
+message GetRolloutDataResponse {
+    bool success = 1;
+    string message = 2;
+    repeated Trajectory data = 3;
+    MetaInfo meta_info = 4;
+}
+
+// ============================================================================
+// 管理 API 消息
+// ============================================================================
+
+// POST /config
+message ConfigRequest {
+    int32 group_size = 1;
+    string task_type = 2;
+    int64 max_memory_bytes = 3;
+    double spill_to_disk_threshold = 4;
+    bool uid_dedup = 5;
+    int32 group_timeout_seconds = 6;
+}
+
+message ConfigResponse {
+    bool success = 1;
+    string message = 2;
+}
+
+// POST /buffer/reset
+message ResetRequest {}
+
+message ResetResponse {
+    bool success = 1;
+    string message = 2;
+}
+
+// DELETE /buffer/instance/{instance_id}
+message DeleteInstanceRequest {
+    string instance_id = 1;
+}
+
+message DeleteInstanceResponse {
+    bool success = 1;
+    string message = 2;
+}

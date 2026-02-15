@@ -9,22 +9,42 @@ add_subdirectory(seastar)
 
 # --- Protobuf code generation ---
 find_package(Protobuf REQUIRED)
-protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS proto/echo.proto)
+protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS proto/transferqueue.proto)
 
-# --- Main executable ---
-add_executable(transfer-queue
-    src/main.cc
-    src/echo_server.cc
-    src/echo_client.cc
+# --- Common include directories ---
+set(TQ_INCLUDE_DIRS
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_BINARY_DIR}           # generated .pb.h
+)
+
+# --- TransferQueue Server ---
+add_executable(transferqueue-server
+    src/server/main.cc
+    src/server/buffer_shard.cc
+    src/server/buffer_manager.cc
+    src/server/http_handler.cc
+    src/server/rpc_handler.cc
+    src/server/dedup_filter.cc
     ${PROTO_SRCS}
 )
 
-target_include_directories(transfer-queue PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/include   # public headers (include/transfer_queue/*.h)
-    ${CMAKE_CURRENT_BINARY_DIR}           # generated echo.pb.h
+target_include_directories(transferqueue-server PRIVATE ${TQ_INCLUDE_DIRS})
+
+target_link_libraries(transferqueue-server PRIVATE
+    Seastar::seastar
+    protobuf::libprotobuf
 )
 
-target_link_libraries(transfer-queue PRIVATE
+# --- TransferQueue Client ---
+add_executable(transferqueue-client
+    src/client/main.cc
+    src/client/client.cc
+    ${PROTO_SRCS}
+)
+
+target_include_directories(transferqueue-client PRIVATE ${TQ_INCLUDE_DIRS})
+
+target_link_libraries(transferqueue-client PRIVATE
     Seastar::seastar
     protobuf::libprotobuf
 )
