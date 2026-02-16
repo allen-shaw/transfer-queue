@@ -15,7 +15,11 @@ BufferManager::BufferManager(const TransferQueueConfig& config)
 BufferManager::~BufferManager() = default;
 
 seastar::future<> BufferManager::start() {
-    return shards_.start(std::ref(config_));
+    return shards_.start(std::ref(config_)).then([this] {
+        return shards_.invoke_on_all([](BufferShard& shard) {
+            return shard.start();
+        });
+    });
 }
 
 seastar::future<> BufferManager::stop() {

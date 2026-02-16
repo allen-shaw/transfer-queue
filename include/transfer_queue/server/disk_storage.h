@@ -44,7 +44,7 @@ public:
 
     /// 批量溢出多个轨迹组
     seastar::future<std::vector<uint64_t>> spill_batch(
-        const std::vector<transferqueue::TrajectoryGroup>& groups);
+        std::vector<transferqueue::TrajectoryGroup> groups);
 
     // ========================================================================
     // 读取（从磁盘加载）

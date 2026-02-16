@@ -11,6 +11,7 @@
 
 #include "transfer_queue/common/config.h"
 #include "transfer_queue/server/dedup_filter.h"
+#include "transfer_queue/server/disk_storage.h"
 #include "transferqueue.pb.h"
 
 namespace transfer_queue {
@@ -25,6 +26,7 @@ namespace transfer_queue {
 /// - Group 聚合：轨迹数达到 group_size 后标记 ready
 /// - 消费式读取：读取后删除
 /// - UID 去重
+/// - 内存不足时溢出到磁盘
 class BufferShard {
     friend class Metrics;
 public:
@@ -33,6 +35,12 @@ public:
     explicit BufferShard(const TransferQueueConfig& config);
 
     ~BufferShard();
+
+    /// 启动 Shard (异步初始化 DiskStorage)
+    seastar::future<> start();
+
+    /// 停止 Shard (异步关闭 DiskStorage)
+    seastar::future<> stop();
 
     // ========================================================================
     // 写入
@@ -94,18 +102,46 @@ private:
     /// 计算当前内存使用量
     size_t estimate_memory_usage() const;
 
+    /// 检查内存并尝试溢出
+    /// @return 溢出了多少字节
+    seastar::future<size_t> try_spill_groups();
+
     const TransferQueueConfig* config_;
     DedupFilter dedup_filter_;
+    DiskStorage disk_storage_;
 
-    // instance_id -> TrajectoryGroup
-    std::unordered_map<std::string, transferqueue::TrajectoryGroup> groups_;
+    struct GroupEntry {
+        // Memory persistence
+        std::unique_ptr<transferqueue::TrajectoryGroup> group_ptr;
+        // Disk persistence
+        uint64_t disk_offset = 0;
+        std::chrono::steady_clock::time_point created_time;
 
-    // instance_id -> 创建时间（用于超时检测）
-    std::unordered_map<std::string, std::chrono::steady_clock::time_point> group_created_times_;
+        bool is_on_disk() const { return disk_offset > 0 && group_ptr == nullptr; }
+        
+        // Helper wrappers
+        bool is_complete() const {
+             if (group_ptr) return group_ptr->is_complete();
+             return true; // Spilled groups must be complete (usually)
+        }
+        int32_t trajectories_size() const {
+            if (group_ptr) return group_ptr->trajectories_size();
+            return 0; // Unknown without loading, or store separately? 
+                      // For now, spill only happens for complete groups, so we can likely infer/store size if needed.
+                      // Ideally we should cache metadata.
+        }
+        // Cache metadata for spilled groups
+        int32_t cached_size = 0;
+        int64_t cached_bytes = 0;
+    };
+
+    // instance_id -> GroupEntry
+    std::unordered_map<std::string, GroupEntry> groups_;
 
     // 统计
     int64_t total_trajectories_ = 0;
     int64_t total_consumed_ = 0;
+    int64_t disk_usage_bytes_ = 0;
 };
 
 } // namespace transfer_queue

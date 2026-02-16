@@ -75,6 +75,7 @@ add_executable(test-buffer-shard
     tests/test_buffer_shard.cc
     src/server/buffer_shard.cc
     src/server/dedup_filter.cc
+    src/server/disk_storage.cc
     ${PROTO_SRCS}
     ${PROTO_HDRS}
 )
@@ -94,6 +95,7 @@ add_executable(test-buffer-manager
     src/server/buffer_manager.cc
     src/server/buffer_shard.cc
     src/server/dedup_filter.cc
+    src/server/disk_storage.cc
     ${PROTO_SRCS}
     ${PROTO_HDRS}
 )
@@ -124,3 +126,22 @@ target_link_libraries(test-disk-storage PRIVATE
 )
 
 add_test(NAME DiskStorage COMMAND test-disk-storage)
+
+add_executable(test-buffer-shard-spill
+    tests/test_buffer_shard_spill.cc
+    src/server/buffer_shard.cc
+    src/server/disk_storage.cc
+    src/server/dedup_filter.cc
+    ${PROTO_SRCS}
+    ${PROTO_HDRS}
+)
+
+target_include_directories(test-buffer-shard-spill PRIVATE ${TQ_INCLUDE_DIRS})
+
+target_link_libraries(test-buffer-shard-spill PRIVATE
+    GTest::gtest
+    Seastar::seastar
+    protobuf::libprotobuf
+)
+
+add_test(NAME BufferShardSpill COMMAND test-buffer-shard-spill)
