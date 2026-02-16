@@ -39,8 +39,7 @@ target_link_libraries(transferqueue-server PRIVATE
 )
 
 # --- TransferQueue Client ---
-add_executable(transferqueue-client
-    src/client/main.cc
+add_library(transferqueue-client
     src/client/client.cc
     ${PROTO_SRCS}
     ${PROTO_HDRS}
@@ -51,6 +50,52 @@ target_include_directories(transferqueue-client PRIVATE ${TQ_INCLUDE_DIRS})
 target_link_libraries(transferqueue-client PRIVATE
     Seastar::seastar
     protobuf::libprotobuf
+)
+
+# --- Example executables ---
+add_executable(write-example
+    examples/write_example.cc
+)
+
+target_include_directories(write-example PRIVATE ${TQ_INCLUDE_DIRS} ${SEASTAR_INCLUDE_DIRS})
+
+target_link_libraries(write-example PRIVATE
+    transferqueue-client
+    Seastar::seastar
+)
+
+add_executable(read-example
+    examples/read_example.cc
+)
+
+target_include_directories(read-example PRIVATE ${TQ_INCLUDE_DIRS} ${SEASTAR_INCLUDE_DIRS})
+
+target_link_libraries(read-example PRIVATE
+    transferqueue-client
+    Seastar::seastar
+)
+
+add_executable(status-example
+    examples/status_example.cc
+)
+
+target_include_directories(status-example PRIVATE ${TQ_INCLUDE_DIRS} ${SEASTAR_INCLUDE_DIRS})
+
+target_link_libraries(status-example PRIVATE
+    transferqueue-client
+    Seastar::seastar
+)
+
+# --- Streaming Test ---
+add_executable(streaming-test
+    tests/test_streaming.cc
+)
+
+target_include_directories(streaming-test PRIVATE ${TQ_INCLUDE_DIRS} ${SEASTAR_INCLUDE_DIRS})
+
+target_link_libraries(streaming-test PRIVATE
+    transferqueue-client
+    Seastar::seastar
 )
 
 # --- Tests ---

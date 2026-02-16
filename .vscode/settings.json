@@ -4,6 +4,7 @@
     "clangd.arguments": [
         "--compile-commands-dir=${workspaceFolder}/build",
         "--background-index",
-        "--clang-tidy"
+        "--clang-tidy",
+        "-std=c++23"
     ]
 }

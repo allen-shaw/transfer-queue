@@ -6,8 +6,10 @@
 #include <functional>
 
 #include <seastar/core/future.hh>
+#include <seastar/rpc/rpc.hh>
 
 #include "transferqueue.pb.h"
+#include "transfer_queue/server/rpc_handler.h"
 
 namespace transfer_queue {
 
@@ -94,7 +96,16 @@ private:
     std::string host_;
     uint16_t port_;
     bool connected_ = false;
-    // TODO: seastar::rpc::protocol::client 实例
+    
+    // RPC client components
+    using RpcProtocol = seastar::rpc::protocol<transfer_queue::RpcHandler::PbSerializer>;
+    std::unique_ptr<RpcProtocol> rpc_proto_;
+    std::unique_ptr<RpcProtocol::client> rpc_client_;
+    
+    // Streaming connection management
+    bool streaming_active_ = false;
+    seastar::future<> streaming_task_;
+    std::function<void()> streaming_stop_handler_;
 };
 
 } // namespace transfer_queue
