@@ -10,7 +10,7 @@ int main(int argc, char** argv) {
     seastar::app_template app;
 
     return app.run(argc, argv, [] {
-        return seastar::async([] -> seastar::future<> {
+        return seastar::async([] {
             try {
                 logger.info("Starting TransferQueue Read Example");
 
@@ -18,11 +18,11 @@ int main(int argc, char** argv) {
                 transfer_queue::TransferQueueClient client("localhost", 8890);
                 
                 // Connect to server
-                co_await client.connect();
+                client.connect().get();
                 logger.info("Connected to TransferQueue server");
 
                 // Read trajectory groups
-                auto groups = co_await client.batch_read(5, false, 0);  // Read up to 5 groups, non-blocking
+                auto groups = client.batch_read(5, false, 0).get();  // Read up to 5 groups, non-blocking
                 
                 if (groups.empty()) {
                     logger.info("No trajectory groups available");
@@ -43,7 +43,7 @@ int main(int argc, char** argv) {
                 }
 
                 // Close connection
-                co_await client.close();
+                client.close().get();
                 logger.info("Disconnected from TransferQueue server");
 
             } catch (const std::exception& e) {

@@ -10,7 +10,7 @@ int main(int argc, char** argv) {
     seastar::app_template app;
 
     return app.run(argc, argv, [] {
-        return seastar::async([] -> seastar::future<> {
+        return seastar::async([] {
             try {
                 logger.info("Starting TransferQueue Status Example");
 
@@ -18,11 +18,11 @@ int main(int argc, char** argv) {
                 transfer_queue::TransferQueueClient client("localhost", 8890);
                 
                 // Connect to server
-                co_await client.connect();
+                client.connect().get();
                 logger.info("Connected to TransferQueue server");
 
                 // Get buffer status
-                auto status = co_await client.get_status();
+                auto status = client.get_status().get();
                 
                 logger.info("Buffer Status:");
                 logger.info("  Total trajectories: {}", status->total_trajectories());
@@ -33,7 +33,7 @@ int main(int argc, char** argv) {
                 logger.info("  Disk usage: {} bytes", status->disk_usage_bytes());
 
                 // Close connection
-                co_await client.close();
+                client.close().get();
                 logger.info("Disconnected from TransferQueue server");
 
             } catch (const std::exception& e) {
