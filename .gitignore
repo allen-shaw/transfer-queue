@@ -58,3 +58,4 @@ compile_commands.json
 *~
 test_storage_dir/
 test_shard_spill_dir/
+*.log
