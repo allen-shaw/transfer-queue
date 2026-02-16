@@ -13,4 +13,4 @@
 // 不能直接作为 seastar::future<T> 的值类型。
 // 需要用 std::unique_ptr<T> 包装，或者使用 seastar::future<foreign_ptr<...>>。
 
-#include "transferqueue.pb.h"
+#include "transferqueue.pb.h" // IWYU pragma: export
